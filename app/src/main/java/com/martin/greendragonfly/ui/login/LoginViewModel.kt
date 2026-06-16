@@ -19,6 +19,7 @@ class LoginViewModel(
     private val _cookie = MutableStateFlow<String>("")
     val cookie: StateFlow<String> = _cookie.asStateFlow()
 
+    private val _account = MutableStateFlow(AccountInfo(username=""))
     val account: StateFlow<AccountInfo> = userPreferencesRepository.accountInfo()
         .stateIn(
             scope = viewModelScope,
@@ -30,6 +31,7 @@ class LoginViewModel(
         viewModelScope.launch {
             userPreferencesRepository.updateAccountInfo(newValue)
         }
+        _account.value = newValue
     }
 
     fun setCookie(cookieStr: String) {
