@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class LoginViewModel(
     private val userPreferencesRepository: UserPreferencesRepository
@@ -19,6 +20,12 @@ class LoginViewModel(
     private val _cookie = MutableStateFlow<String>("")
     val cookie: StateFlow<String> = _cookie.asStateFlow()
 
+    val cookieLastUpdated: StateFlow<String?> = userPreferencesRepository.cookieLastUpdate()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
     private val _account = MutableStateFlow(AccountInfo(username=""))
     val account: StateFlow<AccountInfo> = userPreferencesRepository.accountInfo()
         .stateIn(
@@ -37,6 +44,9 @@ class LoginViewModel(
     fun setCookie(cookieStr: String) {
         Log.d(TAG, cookieStr)
         _cookie.value = cookieStr
+        viewModelScope.launch {
+            userPreferencesRepository.updateCookieLastUpdate(Date())
+        }
     }
 
     companion object {

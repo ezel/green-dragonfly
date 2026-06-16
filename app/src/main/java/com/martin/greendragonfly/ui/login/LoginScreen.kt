@@ -4,15 +4,14 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.webkit.CookieManager
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.martin.greendragonfly.data.AccountInfo
 
 import com.multiplatform.webview.web.WebView
@@ -25,10 +24,12 @@ import com.multiplatform.webview.web.rememberWebViewState
 fun LoginScreen(viewModel: LoginViewModel) {
     val state = rememberWebViewState("https://www.lqtedu.com/login.jsp")
     val navigator = rememberWebViewNavigator()
-    val account = viewModel.account.collectAsState().value
+    val account = viewModel.account.collectAsStateWithLifecycle().value
+    val cookieLastUpdated = viewModel.cookieLastUpdated.collectAsStateWithLifecycle().value
 
     val showDialog = remember { mutableStateOf(false) }
     Column() {
+        Text(text=if (cookieLastUpdated!=null) "Last cookies gotten at: $cookieLastUpdated" else "No cookie stored")
         Button(onClick = { showDialog.value = true }) { Text("Show Account") }
         if (account.username == "" || showDialog.value) {
             AlertDialog(
@@ -97,15 +98,6 @@ fun AccountForm(
             onValueChange = { newValue ->
                 accountState.value = accountState.value.copy(password = newValue)
             })
-//        Row {
-//            Checkbox(
-//                accountState.value.rememberPassword,
-//                onCheckedChange = {
-//                    accountState.value =
-//                        accountState.value.copy(rememberPassword = !accountState.value.rememberPassword)
-//                })
-//            Text("RememberPassword")
-//        }
         Button(onClick = { onSubmit(accountState.value) }) { Text("Save") }
     }
 }
