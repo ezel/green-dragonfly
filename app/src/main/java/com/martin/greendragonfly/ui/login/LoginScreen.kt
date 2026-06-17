@@ -4,13 +4,18 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.webkit.CookieManager
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.martin.greendragonfly.data.AccountInfo
 
@@ -28,54 +33,58 @@ fun LoginScreen(viewModel: LoginViewModel) {
     val cookieLastUpdated = viewModel.cookieLastUpdated.collectAsStateWithLifecycle().value
 
     val showDialog = remember { mutableStateOf(false) }
-    Column() {
-        Text(text=if (cookieLastUpdated!=null) "Last cookies gotten at: $cookieLastUpdated" else "No cookie stored")
-        Button(onClick = { showDialog.value = true }) { Text("Show Account") }
-        if (account.username == "" || showDialog.value) {
-            AlertDialog(
-                onDismissRequest = { showDialog.value = false },
-                text = {
-                    AccountForm(
-                        account,
-                        onSubmit = { newAcc ->
-                            viewModel.updateAccount(newAcc)
-                            showDialog.value = false
-                        }
-                    )
-                },
-                confirmButton = {},
-                dismissButton = null
-            )
-        }
-        if (!state.isLoading) {
-            val currentUrl = state.lastLoadedUrl.toString()
-            Text("Loading completed.\nURL: $currentUrl")
-            if (currentUrl == "https://www.lqtedu.com/parent/selParStu.jsp") {
-                val cookies = CookieManager.getInstance().getCookie(currentUrl)
-                viewModel.setCookie(cookies)
-                Log.d("LoginScreen", currentUrl)
-                Log.d("LoginScreen", cookies.toString())
-                Text("Got cookie:$cookies")
+    Scaffold(modifier = Modifier
+        .fillMaxSize()
+        .safeDrawingPadding()) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding)) {
+            Text(text = if (cookieLastUpdated != null) "Last cookies gotten at: $cookieLastUpdated" else "No cookie stored")
+            Button(onClick = { showDialog.value = true }) { Text("Change Account") }
+            if (account.username == "" || showDialog.value) {
+                AlertDialog(
+                    onDismissRequest = { showDialog.value = false },
+                    text = {
+                        AccountForm(
+                            account,
+                            onSubmit = { newAcc ->
+                                viewModel.updateAccount(newAcc)
+                                showDialog.value = false
+                            }
+                        )
+                    },
+                    confirmButton = {},
+                    dismissButton = null
+                )
             }
-        }
+            if (!state.isLoading) {
+                val currentUrl = state.lastLoadedUrl.toString()
+                Text("Loading completed.\nURL: $currentUrl")
+                if (currentUrl == "https://www.lqtedu.com/parent/selParStu.jsp") {
+                    val cookies = CookieManager.getInstance().getCookie(currentUrl)
+                    viewModel.setCookie(cookies)
+                    Log.d("LoginScreen", currentUrl)
+                    Log.d("LoginScreen", cookies.toString())
+                    Text("Got cookie:$cookies")
+                }
+            }
 //        Text("Here is the webview:")
 //        Text(text = "${state.pageTitle}")
 //        Button(onClick = { navigator.navigateBack() }) { Text("Go Back") }
-        Button(onClick = {
-            navigator.evaluateJavaScript(
-                """
+            Button(onClick = {
+                navigator.evaluateJavaScript(
+                    """
                 var event=new Event('input',{bubbles:true});
                 var unameInput=document.getElementById("UNAME");unameInput.focus();unameInput.value="${account.username}";
                 unameInput.dispatchEvent(event);
                 var pwdInput=document.getElementById("UPWD");pwdInput.focus();pwdInput.value="${account.password}";
-                pwdInput.dispatchEvent(event);
+                pwdInput.dispatchEvent(event);document.getElementById("loginBtn").click()
                 """.trimIndent()
+                )
+            }) { Text("Login and Get cookie") }
+            WebView(
+                state,
+                navigator = navigator,
             )
-        }) { Text("Send account") }
-        WebView(
-            state,
-            navigator = navigator
-        )
+        }
     }
 }
 
