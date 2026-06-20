@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.martin.greendragonfly.data.AccountInfo
+import com.martin.greendragonfly.data.HomeworkRepository
 import com.martin.greendragonfly.data.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 import java.util.Date
 
 class LoginViewModel(
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val HomeworkRepository: HomeworkRepository
 ) : ViewModel() {
     private val _cookie = MutableStateFlow<String>("")
     val cookie: StateFlow<String> = _cookie.asStateFlow()
@@ -49,13 +51,18 @@ class LoginViewModel(
         }
     }
 
+    fun getClass() {
+        viewModelScope.launch {
+
+        }
+    }
     companion object {
         const val TAG = "LoginViewModel"
-        fun provideFactory(repo: UserPreferencesRepository): ViewModelProvider.Factory =
+        fun provideFactory(repo: UserPreferencesRepository, repo2: HomeworkRepository): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return LoginViewModel(repo) as T
+                    return LoginViewModel(repo, repo2) as T
                 }
             }
     }
